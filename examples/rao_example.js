@@ -99,30 +99,36 @@ var ndvi_median_s2 = ee.ImageCollection(ee.List.sequence(ee.Number.parse(START_Y
 var ndvi_latest_s2 = ndvi_median_s2.sort('system:time_start', false).first();
 
 // Get the most recent Rao's Q entropy calculation
-var rao_s2_ndvi = ndvi_median_s2.select('NDVI') // Embed in image coll as RaoQ is wrapper function
+var rao_s2_ndvi_col = ndvi_median_s2.select('NDVI') // Embed in image coll as RaoQ is wrapper function
                     .map(diversity.raoQ(AOI.geometry(), {window_size: WINDOW_SIZE, alpha: ALPHA}))
-                    .sort('system:time_start', false).first();
+                    .map(utils.createTimeBand);
+
+var rao_s2_ndvi = rao_s2_ndvi_col.sort('system:time_start', false).first();
 
 // Get the most recent Rao's Q entropy calculation
-var rao_s2_multi = ndvi_median_s2.select(S2_BANDS) // Embed in image coll as RaoQ is wrapper function
+var rao_s2_multi_col = ndvi_median_s2.select(S2_BANDS) // Embed in image coll as RaoQ is wrapper function
                     .map(diversity.raoQ(AOI.geometry(), {window_size: WINDOW_SIZE, alpha: ALPHA}))
-                    .sort('system:time_start', false).first()
-                    .reduce(ee.Reducer.sum()); // Additive property of Rao's Q enables summation of the bands
+                    .map(utils.createTimeBand);
+
+var rao_s2_multi = rao_s2_multi_col
+                   .sort('system:time_start', false).first()
+                   .reduce(ee.Reducer.sum()); // Additive property of Rao's Q enables summation of the bands
 
 // Load pre-computed results for faster loading in code editor
 rao_s2_ndvi = ee.Image('users/soilwatchtech/Indonesia/rao_s2_ndvi_2022');
-//rao_s2_multi = ee.Image('users/soilwatchtech/Indonesia/rao_s2_multi');
+//rao_s2_multi = ee.Image('users/soilwatchtech/Indonesia/rao_s2_multi_2022');
 
 // Load color palettes from GEE community palettes
 var rao_palette = palettes.matplotlib.viridis[7].slice(0);
 var rao_change_palette = palettes.colorbrewer.RdYlGn[11].slice(0);
+var rao_change_palette_rev = palettes.colorbrewer.RdYlGn[9].slice(0).reverse();
 
 var raoLatest_legend = utils.populateLegend('Beta diversity 2022',
                                   {min: 0, max: 1, palette: rao_palette},
                                   " (low)", " (high)", {});
 Map.add(raoLatest_legend);
 
-var ndvi_legend = utils.populateLegend('NDVI 2022',
+var ndvi_legend = utils.populateLegend('NDVI/CV/trend',
                                   {min: 0, max: 1, palette: rao_change_palette},
                                   " -", " +", {});
 Map.add(ndvi_legend);
@@ -143,6 +149,7 @@ Map.addLayer(rao_s2_ndvi.updateMask(rao_s2_ndvi.lte(0.7) // Mask above 0.7, corr
              .clip(AOI.geometry()),
              {min: 0, max: 1, palette: rao_palette},
              "Rao's Q (alpha=2, window_size=9) Sentinel-2 NDVI");
+
 
 Map.addLayer(rao_s2_multi.updateMask(rao_s2_multi.lte(3.5)
                                        .and(ndvi_latest_s2.select('NDVI').gt(0.8))
@@ -237,16 +244,16 @@ var rao_multi_nicfi = nicfi_col_multi
 
 // Derive the Rao Coefficient of Variation
 var rao_latest = rao_ndvi_nicfi.sort('system:time_start', false).first().select('NDVI');
-var rao_mean = rao_ndvi_nicfi.select('NDVI').reduce(ee.Reducer.mean(), 16);
-var rao_std = rao_ndvi_nicfi.select('NDVI').reduce(ee.Reducer.stdDev(), 16);
+var rao_mean = rao_s2_ndvi_col.select('NDVI').reduce(ee.Reducer.mean(), 16);
+var rao_std = rao_s2_ndvi_col.select('NDVI').reduce(ee.Reducer.stdDev(), 16);
 var rao_cv = rao_std.divide(rao_mean).rename('rao_ndvi_cv');
 
-var rao_ols = utils.trendTS(rao_ndvi_nicfi, 'system:time_start', 'NDVI');
+var rao_ols = utils.trendTS(rao_s2_ndvi_col.select('NDVI'), 'system:time_start', 'NDVI');
 
 // Load pre-computed results for faster loading in code editor
 rao_latest = ee.Image('users/soilwatchtech/Indonesia/rao_nicfi_ndvi_2022');
-//rao_ols = ee.Image('users/soilwatchtech/Indonesia/rao_nicfi_trend_2022');
-//rao_cv = ee.Image('users/soilwatchtech/Indonesia/rao_nicfi_cv_2022');
+rao_ols = ee.Image('users/soilwatchtech/Indonesia/rao_s2_trend_2022');
+rao_cv = ee.Image('users/soilwatchtech/Indonesia/rao_s2_cv_2022');
 
 Map.addLayer(nicfi_col.sort('system:time_start', false).first().select(['R', 'G', 'B']).clip(AOI.geometry()),
              {min: 0, max: 0.1},
@@ -266,15 +273,23 @@ Map.addLayer(rao_latest
              "Rao's Q NICFI NDVI 2022 (alpha=2, window_size=18)");
 
 Map.addLayer(rao_ols.select('scale')
-                    .updateMask(rao_ols.select('significance').neq(0).and(rao_ols.select('significance').gte(2)))
+                    .updateMask(rao_s2_ndvi.lte(0.7)
+                         .and(ndvi_latest_s2.select('NDVI').gt(0.8))
+                         .and(dynamic_world.eq(3))
+                         .and(proba_hillshade.divide(255).gt(0.65)))
                     .clip(AOI.geometry()),
-             {palette: rao_change_palette, min: -0.005, max: 0.005},
-             "Rao's Q NICFI NDVI slope of change 2016-2022 (alpha=2, window_size=18)");
+             {palette: rao_change_palette, min: -0.1, max: 0.1},
+             "Rao's Q S2 NDVI slope of change 2018-2022 (alpha=2, window_size=18)");
 
-Map.addLayer(rao_cv.clip(AOI.geometry()),
-             {palette: rao_change_palette, min: -0.005, max: 0.005},
-             "Rao's Q NICFI NDVI Coefficient of Variation 2016-2022 (alpha=2, window_size=18)");
+Map.addLayer(rao_cv.updateMask(rao_s2_ndvi.lte(0.7)
+                         .and(ndvi_latest_s2.select('NDVI').gt(0.8))
+                         .and(dynamic_world.eq(3))
+                         .and(proba_hillshade.divide(255).gt(0.65)))
+                    .clip(AOI.geometry()),
+             {palette: rao_change_palette_rev, min: 0, max: 1},
+             "Rao's Q S2 NDVI Coefficient of Variation 2018-2022 (alpha=2, window_size=18)");
 
+/*
 // Define arguments for animation function parameters.
 var video_args = {
   'dimensions': 2400,
@@ -286,7 +301,6 @@ var video_args = {
   'palette': rao_palette
 }
 
-/*
 // Function to export GIF
 var generateGIF = function(img, band_name, args){
   print(img.select(band_name).getVideoThumbURL(args));
@@ -342,7 +356,7 @@ Export.image.toAsset({
 Export.image.toAsset({
   image: rao_cv.clip(AOI.geometry()),
   description:'rao_nicfi_cv_2022',
-  assetId: 'users/soilwatchtech/Indonesia/rao_nicfi_cv_2022',
+  assetId: 'users/soilwatchtech/Indonesia/rao_s2_cv_2022',
   region: AOI.geometry(),
   crs: 'EPSG:4326',
   scale: 4.5,
@@ -352,7 +366,7 @@ Export.image.toAsset({
 Export.image.toAsset({
   image: rao_ols.clip(AOI.geometry()),
   description:'rao_nicfi_trend_2022',
-  assetId: 'users/soilwatchtech/Indonesia/rao_nicfi_trend_2022',
+  assetId: 'users/soilwatchtech/Indonesia/rao_s2_trend_2022',
   region: AOI.geometry(),
   crs: 'EPSG:4326',
   scale: 4.5,
