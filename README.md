@@ -20,6 +20,10 @@ Rao's Q example applied to NDVI data for California
 ![Rao's Q example 1](images/Rocchini_2021.png)
 (Taken from [Rocchini et al., 2021](https://onlinelibrary.wiley.com/doi/10.1111/geb.13270))
 
+Since the Rao's Q based on NDVI can be derived from satellite time series such as Sentinel-2 and Planetscope (NICFI basemaps), 
+we can also look at the behavior of Rao's Q over time by computing the coefficient of variation (CV) and slope of change (trend),
+to understand the behavior of Rao's Q over time. The code link in the `Examples` section below provides an example of how to compute the temporal Rao's Q metrics.
+
 ### Canopy Height use-case
 
 Rao's Q can take as input a canopy height model in the case of forest diversity monitoring. In such a case,
