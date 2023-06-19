@@ -46,7 +46,7 @@ var diversity = require('users/soilwatchtech/biodiversityApp:rao.js');
 1. **Rao's Q applied to palm oil plantations and native forest mosaics in Kalimantan, Indonesia**
 
 The script implementing this use case is located under the `examples` folder, and can be accessed via this 
-[link](https://code.earthengine.google.com/c12614be61f9c342c6287ee4518d6dee) directly in the code editor.
+[link](https://code.earthengine.google.com/7aeac9bebcef7ccc3b7b0043a2f02d9b) directly in the code editor.
 
 ![Indonesia Rao example](images/biodiversity_kalimantan.gif)
 
