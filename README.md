@@ -16,8 +16,9 @@ Spectral indices such as NDVI may be used as input to computing the Rao's Q, in 
 to mask out areas of low vegetation cover. The computation of the Rao's Q has the tendency to inflate the diversity score around
 land cover boundaries (e.g. forest edges), hence the importance of masking out these locations.
 
-Rao's Q example applied to NDVI data for California
+Rao's Q example applied to NDVI data for California:
 ![Rao's Q example 1](images/Rocchini_2021.png)
+
 (Taken from [Rocchini et al., 2021](https://onlinelibrary.wiley.com/doi/10.1111/geb.13270))
 
 Since the Rao's Q based on NDVI can be derived from satellite time series such as Sentinel-2 and Planetscope (NICFI basemaps), 
@@ -29,8 +30,9 @@ to understand the behavior of Rao's Q over time. The code link in the `Examples`
 Rao's Q can take as input a canopy height model in the case of forest diversity monitoring. In such a case,
 Rao's Q represents the canopy height heterogeneity, which is a robust proxy of plant diversity in closed-canopy forests.
 
-Rao's Q example applied to GEDI-derived Canopy Height data
+Rao's Q example applied to GEDI-derived Canopy Height data:
 ![Rao's Q example 2](images/torresani_2023.jpg)
+
 (Taken from [Torresani et al., 2023](https://www.sciencedirect.com/science/article/pii/S1574954123001115))
 
 The workbench provided in the `Examples` section combines canopy height and NDVI-derived Rao's Q into a Generalized Additive Model, 
