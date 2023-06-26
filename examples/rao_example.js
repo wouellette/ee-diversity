@@ -17,7 +17,6 @@ var CLD_PRJ_DIST = 10; // The distance (in no of pixels) in which to search from
 var CLD_BUFFER = 200; // The cloud buffer (in meters) to use around detected cloud pixels to mask additionally
 var SNW_THRESH = 0.4; // The snow buffer (in meters) to use around detected cloud pixels to mask additionally
 var MASK_RES = 60; // resolution at which to generate and apply the cloud/shadow mask. 60m instead of 10m to speed up
-var AGG_INTERVAL = 365; // Number of days for which to compute temporal aggregates
 var AOI = //ee.FeatureCollection("projects/sat-io/open-datasets/geoboundaries/CGAZ_ADM2")
           //.filter(ee.Filter.eq('shapeName', 'Ogan Komering Ulu Selatan'));
           ee.FeatureCollection(ee.Feature(ee.Geometry.Rectangle([104.0810472285037,-4.62650507909588,
@@ -32,9 +31,9 @@ var palettes = require('users/gena/packages:palettes');
 var utils = require('users/soilwatchtech/biodiversityApp:utils.js');
 var diversity = require('users/soilwatchtech/biodiversityApp:rao.js');
 
-  var dynamicWorld_class_names = [
-      'built', 'crops', 'trees', 'shrub_and_scrub', 'grass',
-      'water', 'flooded_vegetation', 'bare', 'snow_and_ice'];
+var dynamicWorld_class_names = [
+  'built', 'crops', 'trees', 'shrub_and_scrub', 'grass',
+  'water', 'flooded_vegetation', 'bare', 'snow_and_ice'];
   // The corresponding color hex keys for the land cover classes
 var dynamicWorld_palette =
   [

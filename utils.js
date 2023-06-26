@@ -584,49 +584,6 @@ exports.landCoverDatasets = function(year, geom){
 }
 
 /**
- * Load Dynamic World Cover Trends from Land Cover Class Probabilities
- * @param {String} start_year: The start year for which to load the land cover data
- * @param {String} end_year: The end year for which to load the land cover data
- * @param {String} agg_interval: Aggregation interval in number of days for each trend timestep
- * @param {FeatureCollection} geom: Geometry to stratify the land cover datasets
- * @returns {Dictionary} dw_ols: Dictionary containing the class-specific trends (slope of change)
-                                 with associated significance masks.
- * @ignore
- */
-exports.dynamicWorldTrend = function(start_year, end_year, agg_interval, geom){
-    // Generate temporal land cover trends from Dynamic World probabilities
-    var dw_class_names = ['water', 'trees', 'grass', 'flooded_vegetation', 'crops',
-                                    'shrub_and_scrub', 'built', 'bare', 'snow_and_ice'];
-
-    var dw_col = ee.ImageCollection('GOOGLE/DYNAMICWORLD/V1')
-                  .filterBounds(geom.geometry())
-                  .filterDate(start_year+'-01-01', end_year+'-12-31T23:59:59');
-
-    // Generate temporal intervals based on the AGG_INTERVAL provided
-    // (default is 365/6 = 6 time intervals of 2 months each for a year)
-    var time_intervals = exports.extractTimeRanges(start_year+'-01-01', end_year+'-12-31', agg_interval);
-    // Generate harmonized monthly time series of FCover as input to the
-    // vegetation factor V of the sustainability factor S of the RUSLE equation
-    var dw_ts = ARDS2.harmonizedTS(dw_col,
-                                        dw_class_names,
-                                        time_intervals,
-                                        {agg_type: 'geomedian'})
-                .map(exports.createTimeBand);
-
-    // Dynamic World Probability Trends
-    var mk_trend_dw;
-    var dw_trend;
-    var signif_dw;
-    var dw_ols = {};
-    for (var i = 0; i < dw_class_names.length; i++) {
-      dw_trend = landDegradation.trendTS(dw_ts, 'system:time_start', dw_class_names[i]);
-      dw_ols[dw_class_names[i]] = dw_trend;
-    }
-
-    return dw_ols;
-}
-
-/**
  * Nested function to load the World Cover data
  * @param {String} year: The year for which to load the land cover data
  * @returns {Image} world_cover: World Cover output
