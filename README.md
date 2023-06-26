@@ -64,7 +64,7 @@ The JavaScript code for Rao's Q (`rao.js`) runs in the GEE code editor without i
 
 In order to run the NICFI Basemaps example, one needs to [request access](https://developers.planet.com/docs/integrations/gee/nicfi/) to NICFI Basemaps data in Google Earth Engine.
 
-The example provided (`examples/rao_kalimantan.js`) relies on set of utilities which can be found in the `utils.js` script.
+The example provided (`examples/rao_example.js`) relies on set of utilities which can be found in the `utils.js` script.
 Other dependencies include:
 - [GEE Community Datasets](https://gee-community-catalog.org/): Some datasets provided as community datasets by [Samapriya Roy](https://github.com/samapriya) are instrumental to the example provided.
 - [GEE Community's EE Palettes](https://github.com/gee-community/ee-palettes)
